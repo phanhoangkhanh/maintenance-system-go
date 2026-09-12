@@ -14,16 +14,16 @@
         CREATE DATABASE maintenance_system ->
         GRANT CONNECT ON DATABASE maintenance_system TO admin_ets;
         ALTER DATABASE maintenance_system OWNER TO admin_ets;
+
     4. Set Export params:
         export DATABASE_URL='postgres://admin_ets:123456@localhost:5432/maintenance_system?sslmode=disable'
-
         4.1. Run migrate with export params:
-            migrate \
-                -path database/migrations \
-                -database "$DATABASE_URL" \
+            migrate
+                -path database/migrations
+                -database "$DATABASE_URL"
                 up
 
-            migrate \
-                -path database/migrations \
-                -database "$DATABASE_URL" \
+            migrate
+                -path database/migrations
+                -database "$DATABASE_URL"
                 down 1

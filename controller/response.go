@@ -10,7 +10,7 @@ type ResponseStruct struct {
 }
 
 func ResponseClient(c *gin.Context, statusCode int,  message string, data any)  {
-	c.JSON(200, ResponseStruct{
+	c.JSON(statusCode, ResponseStruct{
 		StatusCode: statusCode,
 		Message:    message,
 		Data:       data,

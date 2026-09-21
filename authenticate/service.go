@@ -11,7 +11,7 @@ import (
 
 func (a *Authenticate) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (models.User, error) {
 	// Implement the login logic here
-	fmt.Println(loginRequest)
+	// fmt.Println(loginRequest)
 	query := models.Query{
 		Where: []models.WhereClause{
 			{

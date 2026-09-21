@@ -14,6 +14,7 @@ type App struct {
 	Config *config.Config
 	Authenticate *authenticate.Authenticate
 	Router *gin.Engine
+
 }
 
 func InitApp() *App {

@@ -30,12 +30,13 @@ func (a *Authenticate) Login(c *gin.Context) {
 		res.ResponseClient(c, http.StatusBadRequest, "Login Form not valid", err.Error())
 		return
 	} 
-	err = a.HandleLoginForm(loginRequest)
+	
+	user, err := a.HandleLoginForm(loginRequest, c)
 	if err != nil {
 		res.ResponseClient(c, http.StatusInternalServerError, "Login failed", err.Error())
 		return
 	}
-	res.ResponseClient(c, 200, "Login successful", nil)
+	res.ResponseClient(c, 200, "Login successful", user)
 	
 }
 

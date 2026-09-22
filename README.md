@@ -31,3 +31,9 @@
     5. Structure
         Init App -> init App with real-struct
         Every module-struct must be Init in each provider inside module
+
+    6. Install Redis via Docker
+        Os linux + open Docker Deskhop dowload img Redis: docker pull redis:7.4-alpine
+        In DockerDeskhop -> build img to container + setup params
+                    name: myRedis + port: 6379
+        Install go-redis/v9 : go get github.com/redis/go-redis/v9

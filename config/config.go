@@ -9,6 +9,7 @@ import (
 
 type Config struct {
 	Database DatabaseConfig
+	Redis    RedisConfig
 }
 
 
@@ -22,6 +23,6 @@ func LoadConfig() *Config {
 
 	return &Config{
 		Database:  LoadDBConfig(),
-		
+		Redis:     LoadRedisConfig(),
 	}
 }

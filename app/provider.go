@@ -1,9 +1,9 @@
 package app
 
 import (
-	"maintenance-system-go/authenticate"
 	"maintenance-system-go/config"
 	database "maintenance-system-go/database/connect"
+	"maintenance-system-go/user"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -11,32 +11,29 @@ import (
 
 type App struct {
 	Database *gorm.DB
-	Config *config.Config
-	Authenticate *authenticate.Authenticate
-	Router *gin.Engine
-
+	Config   *config.Config
+	User     *user.User
+	Router   *gin.Engine
 }
 
 func InitApp() *App {
 
 	config := config.LoadConfig()
-  	database := database.ConnectToDatabase(config)
+	database := database.ConnectToDatabase(config)
 	ginRouter := gin.Default()
 
-	// Register all services and dependencies
-	authenticate := authenticate.InitAuthenticate(database, config)
+	// Register all Modules and Dependencies
+	user := user.InitUser(database, config)
 
 	return &App{
 		Database: database,
 		Config:   config,
-		Authenticate: authenticate,
-		Router:    ginRouter,
-
+		User:     user,
+		Router:   ginRouter,
 	}
 }
 
-//implement indirect.AppContainer interface
+// implement indirect.AppContainer interface
 func (app *App) ReturnItself() *App {
 	return app
 }
-

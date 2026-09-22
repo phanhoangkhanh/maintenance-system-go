@@ -1,14 +1,19 @@
-package authenticate
+package user
 
 import (
 	"maintenance-system-go/helper"
 	models "maintenance-system-go/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
+type Repository struct {
+	db *gorm.DB
+}
+
 // GetUser direct retrieves users with full conditions from whereStruct
-// func (a *Authenticate) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error) {
+// func (a *User) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error) {
 // 	var users []models.User
 
 // 	if  whereStruct.Page < 0 || whereStruct.PerPage < 0 {
@@ -79,9 +84,9 @@ import (
 // 	return users, nil
 // }
 
-func (a *Authenticate) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error){
+func (repo *Repository) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error) {
 	var users []models.User
-	query, err := helper.GrandGetAllInfo(a.Database, whereStruct, c, models.User{})
+	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.User{})
 	if err != nil {
 		return nil, err
 	}

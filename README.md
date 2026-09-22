@@ -37,3 +37,4 @@
         In DockerDeskhop -> build img to container + setup params
                     name: myRedis + port: 6379
         Install go-redis/v9 : go get github.com/redis/go-redis/v9
+        Contruct module Redis and trigger in provider.go

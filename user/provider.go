@@ -2,6 +2,7 @@ package user
 
 import (
 	"maintenance-system-go/config"
+	"maintenance-system-go/database/redis"
 
 	"gorm.io/gorm"
 )
@@ -17,12 +18,13 @@ type User struct {
 	Repository *Repository
 }
 
-func InitUser(db *gorm.DB, config *config.Config) *User {
+func InitUser(db *gorm.DB, config *config.Config, redisClient *redis.RedisClient) *User {
 	repo := &Repository{
 		db: db,
 	}
 	service := &Service{
 		Repo: repo,
+		Redis: redisClient,
 	}
 	controller := &Controller{
 		Service: service,

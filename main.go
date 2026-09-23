@@ -8,6 +8,7 @@ import (
 func main() {
   
   app := app.InitApp()
+  defer app.CloseApp()
   // Register API routes
   routers.RegisterAPIRoutes(app)
 

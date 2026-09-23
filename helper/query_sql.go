@@ -100,12 +100,9 @@ func  GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Conte
 	}
 
 	pageSize := whereStruct.PerPage
-	if pageSize < 1  {
-		pageSize = 20
+	if pageSize >= 1 {
+		offset := (page - 1) * pageSize
+		query = query.Offset(offset).Limit(pageSize)
 	}
-	offset := (page - 1) * pageSize
-
-	query = query.Offset(offset).Limit(pageSize)
-
 	return query, nil
 }

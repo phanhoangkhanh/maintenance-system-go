@@ -2,15 +2,20 @@ package user
 
 import (
 	"fmt"
+	"log"
 	models "maintenance-system-go/models"
 	"net/http"
+	"time"
+
+	"maintenance-system-go/database/redis"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type Service struct {
-	Repo *Repository
+	Repo *Repository 
+	Redis *redis.RedisClient
 }
 
 func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (models.User, error, int) {
@@ -47,6 +52,22 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 	}
 	if userFound.ID == "" {
 		return models.User{}, fmt.Errorf("Not Found User"), http.StatusNotFound
+	}
+
+	//Create session in Redis 
+	sessionTTL := 24 * time.Hour // Set the session TTL as needed
+	sessionId, err := s.Redis.Create(c, userFound, sessionTTL)
+	if err != nil {
+		log.Printf("Redis error: %v\n", err)
+		return models.User{}, err, http.StatusInternalServerError
+	}
+
+	//test get Redis 
+	data, err := s.Redis.Get(c, sessionId)
+	if err != nil {
+		log.Printf("Redis get error: %v\n", err)
+	} else {
+		log.Printf("Redis get data...: %s\n", string(data))
 	}
 
 	return userFound, nil, http.StatusOK

@@ -37,4 +37,11 @@
         In DockerDeskhop -> build img to container + setup params
                     name: myRedis + port: 6379
         Install go-redis/v9 : go get github.com/redis/go-redis/v9
-        Contruct module Redis and trigger in provider.go
+        Contruct module Redis and trigger in provider.go -> register for serviec in each modules need:
+                ex: service := &Service{
+                        Repo: repo,
+                        Redis: redisClient,
+                    }
+    7. Create UUID-Value and store in Redis -> with TTL 48h.
+            Check request with cookies inside to confirm who is requested from browser
+            Key was created via 'github.com/google/uuid' : go get github.com/google/uuid

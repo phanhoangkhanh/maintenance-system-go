@@ -14,7 +14,7 @@ import (
 )
 
 type Service struct {
-	Repo *Repository 
+	Repo  *Repository
 	Redis *redis.RedisClient
 }
 
@@ -54,21 +54,16 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 		return models.User{}, fmt.Errorf("Not Found User"), http.StatusNotFound
 	}
 
-	//Create session in Redis 
+	//Create session in Redis
 	sessionTTL := 24 * time.Hour // Set the session TTL as needed
-	sessionId, err := s.Redis.Create(c, userFound, sessionTTL)
+	sessionID, err := s.Redis.Create(c, userFound, sessionTTL)
 	if err != nil {
 		log.Printf("Redis error: %v\n", err)
 		return models.User{}, err, http.StatusInternalServerError
 	}
 
-	//test get Redis 
-	data, err := s.Redis.Get(c, sessionId)
-	if err != nil {
-		log.Printf("Redis get error: %v\n", err)
-	} else {
-		log.Printf("Redis get data...: %s\n", string(data))
-	}
+	// Only send the session cookie after Redis has stored the session successfully.
+	c.SetCookie("session_id", sessionID, int(sessionTTL.Seconds()), "/", "", c.Request.TLS != nil, true)
 
 	return userFound, nil, http.StatusOK
 }

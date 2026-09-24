@@ -10,19 +10,20 @@ import (
 type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
+	CORS     CORSConfig
 }
-
 
 func LoadConfig() *Config {
 	if os.Getenv("ENV") != "prod" {
 		err := _godotenv.Load(".env")
-		if err != nil  {
+		if err != nil {
 			log.Fatalf("Error loading .env file %s", err)
 		}
 	}
 
 	return &Config{
-		Database:  LoadDBConfig(),
-		Redis:     LoadRedisConfig(),
+		Database: LoadDBConfig(),
+		Redis:    LoadRedisConfig(),
+		CORS:     LoadCORSConfig(),
 	}
 }

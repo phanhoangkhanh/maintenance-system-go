@@ -43,5 +43,37 @@
                         Redis: redisClient,
                     }
     7. Create UUID-Value and store in Redis -> with TTL 48h.
+            Set cookies for Login-request for first-time
+            Next time , the request has cookies inside to valid whom request
             Check request with cookies inside to confirm who is requested from browser
             Key was created via 'github.com/google/uuid' : go get github.com/google/uuid
+
+
+## CORS cho UI gọi API bằng cookie
+
+Khai báo trong `.env` (local), hoặc biến môi trường khi `ENV=prod`:
+
+```dotenv
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://app.example.com
+```
+
+Thay `https://app.example.com` bằng origin UI thực tế. Mỗi origin gồm scheme,
+host và port nếu có; không kèm path hoặc dấu `/` cuối. Không dùng `*`.
+Danh sách là các địa chỉ UI gọi API, không phải URL API đích.
+Local mặc định cho phép hai origin localhost trên khi chưa cấu hình;
+production không cho phép cross-origin nếu danh sách trống.
+
+Frontend cần `credentials: "include"` cho cả login và các request sau:
+
+```js
+fetch("https://api.example.com/login", {
+  method: "POST",
+  credentials: "include",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ name, password }),
+});
+```
+
+Middleware trả origin khớp request, cho phép credentials và xử lý preflight
+OPTIONS. CORS không thay thế chính sách cookie: UI/API khác site cần
+`SameSite=None; Secure` và vẫn chịu chính sách cookie bên thứ ba của browser.

@@ -6,7 +6,9 @@ import (
 	"maintenance-system-go/config"
 	database "maintenance-system-go/database/connect"
 	myredis "maintenance-system-go/database/redis"
+	"maintenance-system-go/routers/middleware"
 	"maintenance-system-go/user"
+	"net/http"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -18,6 +20,7 @@ type App struct {
 	Config   *config.Config
 	User     *user.User
 	Router   *gin.Engine
+	MiddlewareUser *middleware.UserMiddleware
 }
 
 func InitApp() *App {
@@ -26,9 +29,18 @@ func InitApp() *App {
 	database := database.ConnectToDatabase(config)
 	redisClient := myredis.InitRedis(config)
 	ginRouter := gin.Default()
+	//Handle CORS for UI calling
+	ginRouter.Use(corsMiddleware(config.CORS))
+	// set SameSite policy for all cookies gin context
+	ginRouter.Use(func(c *gin.Context) {
+		// Default SameSite policy for cookies set during this request.
+		c.SetSameSite(http.SameSiteLaxMode)
+		c.Next()
+	})
 
 	// Register all Modules and Dependencies
 	user := user.InitUser(database, config, redisClient)
+	userMiddleware := middleware.InitUserMiddleware(redisClient)
 
 	return &App{
 		Redis:    redisClient,
@@ -36,10 +48,11 @@ func InitApp() *App {
 		Config:   config,
 		User:     user,
 		Router:   ginRouter,
+		MiddlewareUser: userMiddleware,
 	}
 }
 
-func (app *App) CloseApp()  {
+func (app *App) CloseApp() {
 	var errs []error
 
 	if app.Redis != nil {

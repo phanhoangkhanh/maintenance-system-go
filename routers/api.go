@@ -3,6 +3,7 @@ package routers
 import (
 	"encoding/json"
 	"fmt"
+
 	"maintenance-system-go/app"
 	"maintenance-system-go/controller"
 	"maintenance-system-go/models"
@@ -10,15 +11,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterAPIRoutes(app *app.App) {
-	app.Router.GET("/ping", controller.HandleTest)
+func (r *Router) RegisterAPIRoutes(app *app.App) {
+	r.Engine.GET("/ping", controller.HandleTest)
 
 	// USER APIs
 	userController := app.User.Controller
-	app.Router.POST("/login", userController.Login)
+	r.Engine.POST("/login", userController.Login)
 
-	hasLoginRoute := app.Router.Group("/") 
-	hasLoginRoute.Use(app.MiddlewareUser.HasLogin())
+	//After Login
+	hasLoginRoute := r.Engine.Group("/v1") 
+	userMiddleware := app.Middleware.User
+	hasLoginRoute.Use(userMiddleware.HasLogin())
 	{
 		hasLoginRoute.GET("/profile", func(c *gin.Context) {
 			example := c.MustGet("current_user").([]byte)

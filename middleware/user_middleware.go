@@ -6,14 +6,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type UserMiddleware struct {
+type UserMiddleware struct {	
 	Redis *redis.RedisClient
 }
+
 func InitUserMiddleware(redisClient *redis.RedisClient) *UserMiddleware {
 	return &UserMiddleware{
 		Redis: redisClient,
 	}
 }
+
 func (um *UserMiddleware) HasLogin() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		//Looking for cookies in request
@@ -28,6 +30,7 @@ func (um *UserMiddleware) HasLogin() gin.HandlerFunc {
 			c.AbortWithStatusJSON(401, gin.H{"error": "Unauthorized"})
 			return
 		}
+	
 		c.Set("current_user", user)
 
 		c.Next()

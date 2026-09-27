@@ -7,10 +7,16 @@ import (
 
 func main() {
   
+  //1-Init App
   app := app.InitApp()
   defer app.CloseApp()
-  // Register API routes
-  routers.RegisterAPIRoutes(app)
 
-  app.Router.Run() // listens on 0.0.0.0:8080 by default
+  //2-InitRouter
+  router := routers.InitRouter(app.Config)
+
+  // Combine router with app
+  router.RegisterAPIRoutes(app)
+
+  //Keep the server running
+  router.Engine.Run() // listens on 0.0.0.0:8080 by default
 }

@@ -18,5 +18,6 @@ func (r *Router) RegisterAPIRoutes(app *app.App) {
 	hasLoginRoute.Use(userMiddleware.HasLogin())
 	{
 		hasLoginRoute.GET("/user", userController.GetListUser)
+		hasLoginRoute.POST("/user", userController.CreateOrUpdateUser)
 	}
 }

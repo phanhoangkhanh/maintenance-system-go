@@ -3,6 +3,8 @@ package models
 import "time"
 
 //json : response + form: input request
+
+//this Struct prepesent a user in Database, also the query params in request
 type User struct {
 	ID string `json:"id" gorm:"column:id;primaryKey" form:"id"`
 	Name string `json:"name" gorm:"column:name;uniqueIndex" form:"name"`

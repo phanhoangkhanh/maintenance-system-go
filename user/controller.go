@@ -40,5 +40,8 @@ func (controller *Controller) GetListUser(c *gin.Context) {
 		return
 	}
 	res.ResponseClient(c, 200, "Get User successful", users)
+}
 
+func (controller *Controller) CreateOrUpdateUser(c *gin.Context) {	
+	
 }

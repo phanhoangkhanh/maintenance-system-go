@@ -8,6 +8,7 @@ import (
 	myredis "maintenance-system-go/database/redis"
 	"maintenance-system-go/middleware"
 	"maintenance-system-go/user"
+	user_module "maintenance-system-go/user"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -33,6 +34,9 @@ func InitApp() *App {
 	// Register all Modules and Dependencies
 	user := user.InitUser(database, config, redisClient)
 	middleware := middleware.InitMiddleware(redisClient)
+
+	//Register Validator from all module 
+	user_module.RegisterValidatorUser()
 
 	return &App{
 		Redis:    redisClient,

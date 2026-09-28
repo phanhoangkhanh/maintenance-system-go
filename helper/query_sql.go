@@ -3,23 +3,18 @@ package helper
 import (
 	"fmt"
 	"maintenance-system-go/models"
+	"reflect"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
+	"gorm.io/gorm/schema"
 )
 
-type Helper struct {
-}
+func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Context, modelName T) (*gorm.DB, error) {
 
-func InitHelper() *Helper {
-	return &Helper{}
-}
-
-func  GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Context, modelName T) ( *gorm.DB,error) {
-
-	if  whereStruct.Page < 0 || whereStruct.PerPage < 0 {
+	if whereStruct.Page < 0 || whereStruct.PerPage < 0 {
 		return nil, fmt.Errorf("limit and pagination must not be negative")
 	}
 	query := db.WithContext(c.Request.Context()).Model(&modelName)
@@ -58,7 +53,7 @@ func  GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Conte
 	//2 - Build the WHERE clauses based on the provided conditions
 	for _, condition := range whereStruct.Where {
 		col := clause.Column{Name: condition.Key}
-		
+
 		operator := strings.ToUpper(strings.TrimSpace(condition.Compare))
 		if operator == "" {
 			operator = "="
@@ -81,7 +76,7 @@ func  GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Conte
 				return nil, fmt.Errorf("invalid order by: %q", order)
 			}
 			col := clause.Column{Name: parts[0]}
-			
+
 			direction := "ASC"
 			if len(parts) == 2 {
 				direction = strings.ToUpper(parts[1])
@@ -105,4 +100,61 @@ func  GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c *gin.Conte
 		query = query.Offset(offset).Limit(pageSize)
 	}
 	return query, nil
+}
+
+// GenerateWhereStruct builds text and scalar filters, --- Skipping timestamps and hidden fields.
+// Strings, including dereferenced string pointers, use substring matching.
+func GenerateWhereStruct[T any](model *T) models.Query {
+	query := models.Query{}
+	if model == nil {
+		return query
+	}
+	value := reflect.ValueOf(model).Elem()
+	if value.Kind() != reflect.Struct {
+		return query
+	}
+	typ := value.Type()
+	for i := 0; i < value.NumField(); i++ {
+		key := typ.Field(i)
+		field := value.Field(i)
+		if !field.CanInterface() || key.Tag.Get("json") == "-" || key.Tag.Get("gorm") == "-" {
+			continue
+		}
+		column := schema.NamingStrategy{}.ColumnName("", key.Name)
+		for _, setting := range strings.Split(key.Tag.Get("gorm"), ";") {
+			if name, ok := strings.CutPrefix(setting, "column:"); ok {
+				column = name
+			}
+		}
+		if column == "created_at" || column == "updated_at" || column == "deleted_at" {
+			continue
+		}
+		isPointer := field.Kind() == reflect.Ptr //reflect Pointer
+		//filed is pointer and not nil
+		for field.Kind() == reflect.Ptr && !field.IsNil() {
+			field = field.Elem() // parse pointer *string → string
+		}
+		//not pointer and zero value
+		if !isPointer && field.IsZero() {
+			continue
+		}
+		//pointer and zero value
+		if isPointer && field.IsZero() {
+			continue
+		}
+		condition := models.WhereClause{Key: column, Compare: "="}
+		switch field.Kind() {
+		case reflect.String:
+			condition.Compare = "ILIKE"
+			condition.Value = "%" + field.String() + "%"
+		case reflect.Bool, reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+			reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+			reflect.Float32, reflect.Float64:
+			condition.Value = field.Interface()
+		default:
+			continue
+		}
+		query.Where = append(query.Where, condition)
+	}
+	return query
 }

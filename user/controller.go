@@ -30,3 +30,15 @@ func (controller *Controller) Login(c *gin.Context) {
 	res.ResponseClient(c, 200, "Login successful", user)
 
 }
+
+func (controller *Controller) GetListUser(c *gin.Context) {
+	service := controller.Service
+	users, err, statusError := service.GetListUser(c)
+	if err != nil {
+		log.Printf("Get User got error: %s\n", err)
+		res.ResponseClient(c, statusError, "Get User failed", err.Error())
+		return
+	}
+	res.ResponseClient(c, 200, "Get User successful", users)
+
+}

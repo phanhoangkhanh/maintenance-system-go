@@ -1,15 +1,14 @@
 package models
 
-
 type WhereClause struct {
-	Key string
+	Key     string
 	Compare string
-	Value string
+	Value   any
 }
 
-type Query struct {	
-	Where []WhereClause
-	OrderBy string			
-	Page int 
+type Query struct {
+	Where   []WhereClause
+	OrderBy string
+	Page    int
 	PerPage int
 }

@@ -3,6 +3,7 @@ package user
 import (
 	"fmt"
 	"log"
+	"maintenance-system-go/helper"
 	models "maintenance-system-go/models"
 	"net/http"
 	"time"
@@ -66,4 +67,22 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 	c.SetCookie("session_id", sessionID, int(sessionTTL.Seconds()), "/", "", c.Request.TLS != nil, true)
 
 	return userFound, nil, http.StatusOK
+}
+
+func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
+	var user models.User
+	if err := c.ShouldBindQuery(&user); err != nil {
+		return nil, err, http.StatusBadRequest
+	}
+	query := helper.GenerateWhereStruct(&user)
+	query.OrderBy = "created_at DESC , name ASC"
+	fmt.Printf("QUERY JSON %v\n", query)
+	query.Page = user.Page
+	query.PerPage = user.PerPage
+	
+	users, err := s.Repo.GetUser(query, c)
+	if err != nil {
+		return nil, err, http.StatusInternalServerError
+	}
+	return users, nil, http.StatusOK
 }

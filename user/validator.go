@@ -5,9 +5,10 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-
+//MOdels has :binding:"required,inRoleGroup" -> clarify func here and register in module-provider
+//Docs: https://pkg.go.dev/github.com/go-playground/validator/v10#hdr-Required
 func RegisterValidatorUser() {
-	  if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
     v.RegisterValidation("inRoleGroup", InRoleGroup)
   }
 }
@@ -15,7 +16,7 @@ func RegisterValidatorUser() {
 var InRoleGroup validator.Func = func(fl validator.FieldLevel) bool {
   role, ok := fl.Field().Interface().(string)
   if ok {
-    validRoles := []string{"admin", "user", "manager"} // Example roles
+    validRoles := []string{"admin", "user", "manager"} 
     for _, r := range validRoles {
       if role == r {
         return true
@@ -25,3 +26,4 @@ var InRoleGroup validator.Func = func(fl validator.FieldLevel) bool {
   }
   return false
 }
+

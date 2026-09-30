@@ -12,6 +12,12 @@ type Repository struct {
 	db *gorm.DB
 }
 
+func InitRepository(db *gorm.DB) *Repository {
+	return &Repository{
+		db: db,
+	}
+}
+
 // GetUser direct retrieves users with full conditions from whereStruct
 // func (a *User) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error) {
 // 	var users []models.User
@@ -95,4 +101,13 @@ func (repo *Repository) GetUser(whereStruct models.Query, c *gin.Context) ([]mod
 		return nil, err
 	}
 	return users, nil
+}
+
+func (repo *Repository) CreateUser(user *models.User, c *gin.Context) (*models.User, error) {
+	result := gorm.WithResult()
+	err := gorm.G[models.User](repo.db, result).Create(c, user)
+	if err != nil || result.RowsAffected == 0 || result.Error != nil {
+		return nil, err
+	}
+	return user, nil
 }

@@ -30,6 +30,9 @@ func InitUser(db *gorm.DB, config *config.Config, redisClient *redis.RedisClient
 		Service: service,
 	}
 
+	//Register Validator from module 
+	RegisterValidatorUser()
+
 	return &User{
 		Database: db,
 		Config:   config,

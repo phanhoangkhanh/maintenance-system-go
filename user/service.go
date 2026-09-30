@@ -11,6 +11,7 @@ import (
 	"maintenance-system-go/database/redis"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -85,4 +86,66 @@ func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
 		return nil, err, http.StatusInternalServerError
 	}
 	return users, nil, http.StatusOK
+}
+
+
+
+func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Context) (models.User, error, int) {
+	//Check unique name and mobile 
+	query := models.Query{
+		Where: []models.WhereClause{
+			{
+				Key:     "name",
+				Compare: "=",
+				Value:   request.Name,
+			},
+		},
+	}
+	existingUsers, err := s.Repo.GetUser(query, c)
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	if len(existingUsers) > 0 {
+		return models.User{}, fmt.Errorf("user with the same name already exists"), http.StatusBadRequest
+	}
+	query = models.Query{
+		Where: []models.WhereClause{
+			{
+				Key:     "mobile_phone",
+				Compare: "=",
+				Value:   request.Mobile,
+			},
+		},
+	}
+	existingUsers, err = s.Repo.GetUser(query, c)
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	if len(existingUsers) > 0 {
+		return models.User{}, fmt.Errorf("user with the same mobile phone already exists"), http.StatusBadRequest
+	}
+
+	// Hash the password before storing it
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	newUser := request.ToNewUser(string(hashedPassword))
+	id, err := uuid.NewRandom()
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	newUser.ID = id.String()
+	//Create User
+	createdUser, err := s.Repo.CreateUser(newUser, c)
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+
+	return *createdUser, nil, http.StatusOK
+}
+
+func (s *Service) UpdateUser(request *CreateOrUpdateUserRequest, c *gin.Context) (models.User, error, int) {
+	// Implement the update user logic here
+	return models.User{}, nil, http.StatusOK
 }

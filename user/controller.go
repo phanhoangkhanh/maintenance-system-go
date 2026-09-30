@@ -43,5 +43,30 @@ func (controller *Controller) GetListUser(c *gin.Context) {
 }
 
 func (controller *Controller) CreateOrUpdateUser(c *gin.Context) {	
+	var request CreateOrUpdateUserRequest
+	err := c.ShouldBind(&request)
+	if err != nil {
+		res.ResponseClient(c, http.StatusBadRequest, "Request params not valid", err.Error())
+		return
+	}
+	service := controller.Service
+
+	if request.Kind == "create" {
+		user, err, statusError := service.CreateNewUser(&request, c)
+		if err != nil {
+			log.Printf("CreateOrUpdateUser got error: %s\n", err)
+			res.ResponseClient(c, statusError, "CreateOrUpdateUser failed", err.Error())
+			return
+		}
+		res.ResponseClient(c, 200, "Create New User successful", user)
+	} else if request.Kind == "update" {
+		user, err, statusError := service.UpdateUser(&request, c)
+		if err != nil {
+			log.Printf("CreateOrUpdateUser got error: %s\n", err)
+			res.ResponseClient(c, statusError, "CreateOrUpdateUser failed", err.Error())
+			return
+		}
+		res.ResponseClient(c, 200, "Update User successful", user)
+	}
 	
 }

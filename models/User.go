@@ -16,6 +16,6 @@ type User struct {
 	CreatedAt *time.Time `json:"created_at" gorm:"column:created_at" form:"created_at"` // CreatedAt is auto create current timestamp
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at" form:"updated_at"` // UpdatedAt is auto update current timestamp
 	DeletedAt *time.Time `json:"deleted_at" gorm:"column:deleted_at" form:"deleted_at"` 
-	Page int `json:"-" form:"page"` //no response but got from query URL request
-	PerPage int `json:"-" form:"per_page"` //no response but got from query URL request
+	Page int `json:"-" gorm:"-" form:"page"` //no response but got from query URL request
+	PerPage int `json:"-" gorm:"-" form:"per_page"` //no response but got from query URL request
 }

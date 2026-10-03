@@ -21,6 +21,7 @@ func InitRedis(cfg *config.Config) *RedisClient {
 		Addr:     fmt.Sprintf("%s:%d", cfg.Redis.Host, cfg.Redis.Port),
 		Username: cfg.Redis.Username,
 		DB:       cfg.Redis.DB,
+		ContextTimeoutEnabled: true,
 	}
 	client := redis.NewClient(options)
 	_, err := client.Ping(context.Background()).Result()

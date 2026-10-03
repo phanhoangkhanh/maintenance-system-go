@@ -1,10 +1,10 @@
 package user
 
 import (
+	"context"
 	"maintenance-system-go/helper"
 	models "maintenance-system-go/models"
 
-	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
@@ -90,7 +90,7 @@ func InitRepository(db *gorm.DB) *Repository {
 // 	return users, nil
 // }
 
-func (repo *Repository) GetUser(whereStruct models.Query, c *gin.Context) ([]models.User, error) {
+func (repo *Repository) GetUser(whereStruct models.Query, c context.Context) ([]models.User, error) {
 	var users []models.User
 	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.User{})
 	if err != nil {
@@ -103,11 +103,23 @@ func (repo *Repository) GetUser(whereStruct models.Query, c *gin.Context) ([]mod
 	return users, nil
 }
 
-func (repo *Repository) CreateUser(user *models.User, c *gin.Context) (*models.User, error) {
+func (repo *Repository) CreateUser(user *models.User, c context.Context) (*models.User, error) {
 	result := gorm.WithResult()
 	err := gorm.G[models.User](repo.db, result).Create(c, user)
 	if err != nil || result.RowsAffected == 0 || result.Error != nil {
 		return nil, err
 	}
 	return user, nil
+}
+
+func (repo *Repository) UpdateUser(user *models.User, c context.Context) (*models.User, error) {
+	_, err := gorm.G[models.User](repo.db).Where("id=?", user.ID).Updates(c, *user)
+	if err != nil {
+		return nil, err
+	}
+	var updatedUser models.User
+	if err := repo.db.WithContext(c).First(&updatedUser, "id = ?", user.ID).Error; err != nil {
+		return nil, err
+	}
+	return &updatedUser, nil
 }

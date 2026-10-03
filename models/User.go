@@ -1,13 +1,18 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
 
 //json : response + form: input request
 
-//this Struct prepesent a user in Database, also the query params in request
+//this Struct prepesent a user in Database, also the query params in GET request
 type User struct {
-	ID string `json:"id" gorm:"column:id;primaryKey" form:"id"`
 	Name string `json:"name" gorm:"column:name;uniqueIndex" form:"name"`
+	ID string `json:"id" gorm:"column:id;primaryKey" form:"id"`
 	Email *string `json:"email" gorm:"column:email" form:"email"` // *string allow null value
 	MobilePhone string `json:"mobile_phone" gorm:"column:mobile_phone" form:"mobile_phone"`
 	Role string `json:"role" gorm:"column:role" form:"role"`
@@ -16,6 +21,14 @@ type User struct {
 	CreatedAt *time.Time `json:"created_at" gorm:"column:created_at" form:"created_at"` // CreatedAt is auto create current timestamp
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at" form:"updated_at"` // UpdatedAt is auto update current timestamp
 	DeletedAt *time.Time `json:"deleted_at" gorm:"column:deleted_at" form:"deleted_at"` 
-	Page int `json:"-" gorm:"-" form:"page"` //no response but got from query URL request
-	PerPage int `json:"-" gorm:"-" form:"per_page"` //no response but got from query URL request
+
+	Page int `json:"-" gorm:"-" form:"page"` //no response or gorm but got from query URL request
+	PerPage int `json:"-" gorm:"-" form:"per_page"` //no response or gorm but got from query URL request
+	CreatedAtFrom string `json:"-" gorm:"-" form:"created_at_from" compareTime:"from,created_at"` //no response or gorm but got from query URL request
+	CreatedAtTo   string `json:"-" gorm:"-" form:"created_at_to" binding:"required_with=CreatedAtFrom" compareTime:"to,created_at"` //no response or gorm but got from query URL request
+}
+//Auto create ID
+func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
+  u.ID = uuid.New().String()
+  return
 }

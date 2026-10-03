@@ -11,7 +11,6 @@ import (
 	"maintenance-system-go/database/redis"
 
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -33,7 +32,7 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 		},
 		OrderBy: "created_at DESC , name ASC",
 	}
-	users, err := s.Repo.GetUser(query, c)
+	users, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -58,7 +57,7 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 
 	//Create session in Redis
 	sessionTTL := 24 * time.Hour // Set the session TTL as needed
-	sessionID, err := s.Redis.Create(c, userFound, sessionTTL)
+	sessionID, err := s.Redis.Create(c.Request.Context(), userFound, sessionTTL)
 	if err != nil {
 		log.Printf("Redis error: %v\n", err)
 		return models.User{}, err, http.StatusInternalServerError
@@ -77,11 +76,11 @@ func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
 	}
 	query := helper.GenerateWhereStruct(&user)
 	query.OrderBy = "created_at DESC , name ASC"
-	fmt.Printf("QUERY JSON %v\n", query)
 	query.Page = user.Page
 	query.PerPage = user.PerPage
+	fmt.Printf("QUERY JSON %v\n", query)
 	
-	users, err := s.Repo.GetUser(query, c)
+	users, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -101,7 +100,7 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 			},
 		},
 	}
-	existingUsers, err := s.Repo.GetUser(query, c)
+	existingUsers, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -117,7 +116,7 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 			},
 		},
 	}
-	existingUsers, err = s.Repo.GetUser(query, c)
+	existingUsers, err = s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -130,14 +129,9 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
-	newUser := request.ToNewUser(string(hashedPassword))
-	id, err := uuid.NewRandom()
-	if err != nil {
-		return models.User{}, err, http.StatusInternalServerError
-	}
-	newUser.ID = id.String()
+	newUser := request.FromRequestToNewUser(string(hashedPassword))
 	//Create User
-	createdUser, err := s.Repo.CreateUser(newUser, c)
+	createdUser, err := s.Repo.CreateUser(newUser, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -146,6 +140,56 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 }
 
 func (s *Service) UpdateUser(request *CreateOrUpdateUserRequest, c *gin.Context) (models.User, error, int) {
-	// Implement the update user logic here
-	return models.User{}, nil, http.StatusOK
+	//Check if user exists
+	query := models.Query{
+		Where: []models.WhereClause{
+			{
+				Key:     "id",
+				Compare: "=",
+				Value:   request.ID,
+			},
+		},
+	}
+	existingUsers, err := s.Repo.GetUser(query, c.Request.Context())
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	if len(existingUsers) == 0 {
+		return models.User{}, fmt.Errorf("user not found"), http.StatusNotFound
+	}
+	userToUpdate := existingUsers[0] 
+
+	//Not this user request 
+	userActive, err := helper.GetUserActive(c)
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+	if userToUpdate.ID == userActive.ID {
+		return models.User{}, fmt.Errorf("cannot update the currently logged-in user"), http.StatusForbidden
+	}
+
+	//prepare password
+	hashedPassword := ""
+	if request.Password != "" {
+		hashString, err := bcrypt.GenerateFromPassword([]byte(request.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return models.User{}, err, http.StatusInternalServerError
+		}
+		hashedPassword = string(hashString)
+	}
+
+
+	newUser := request.FromRequestToNewUser(hashedPassword)
+	newUser.ID = userToUpdate.ID
+
+
+	updatedUser, err := s.Repo.UpdateUser(newUser, c.Request.Context())
+	if err != nil {
+		return models.User{}, err, http.StatusInternalServerError
+	}
+
+
+
+
+	return *updatedUser, nil, http.StatusOK
 }

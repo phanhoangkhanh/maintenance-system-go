@@ -1,6 +1,7 @@
 package user
 
 import "maintenance-system-go/models"
+
 type LoginRequest struct {
 	Name     string `json:"name" binding:"required"`
 	Password string `json:"password" binding:"required"`
@@ -17,14 +18,27 @@ type CreateOrUpdateUserRequest struct {
 	Mobile   string `form:"mobile" json:"mobile" binding:"required_if=Kind create,omitempty,number"`
 }
 
-func (r CreateOrUpdateUserRequest) ToNewUser(passwordHash string) *models.User {
-    return &models.User{
-        Name:        r.Name,
-        Email:       &r.Email,
-        MobilePhone: r.Mobile,
-        Role:        r.Role,
-        Status:      r.Status,
-        Password:    passwordHash,
-    }
+func (r CreateOrUpdateUserRequest) FromRequestToNewUser(passwordHash string) *models.User {
+	user := &models.User{
+		Name:        r.Name,
+		Email:       &r.Email,
+		MobilePhone: r.Mobile,
+		Role:        r.Role,
+		Status:      r.Status,
+	}
+	if passwordHash != "" {
+		user.Password = passwordHash
+	}
+	return user
 }
-	
+
+// FromRequestToUserUpdate leaves empty fields at their zero value so GORM
+// Updates skips them, including the nullable email field.
+func (r CreateOrUpdateUserRequest) FromRequestToUserUpdate(passwordHash string) *models.User {
+	user := r.FromRequestToNewUser(passwordHash)
+	user.ID = r.ID
+	if r.Email == "" {
+		user.Email = nil
+	}
+	return user
+}

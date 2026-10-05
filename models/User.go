@@ -22,10 +22,12 @@ type User struct {
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at" form:"updated_at"` // UpdatedAt is auto update current timestamp
 	DeletedAt *time.Time `json:"deleted_at" gorm:"column:deleted_at" form:"deleted_at"` 
 
-	Page int `json:"-" gorm:"-" form:"page"` //no response or gorm but got from query URL request
-	PerPage int `json:"-" gorm:"-" form:"per_page"` //no response or gorm but got from query URL request
-	CreatedAtFrom string `json:"-" gorm:"-" form:"created_at_from" compareTime:"from,created_at"` //no response or gorm but got from query URL request
-	CreatedAtTo   string `json:"-" gorm:"-" form:"created_at_to" binding:"required_with=CreatedAtFrom" compareTime:"to,created_at"` //no response or gorm but got from query URL request
+	GetQueryParams
+
+	// Page int `json:"-" gorm:"-" form:"page"` //no response or gorm but got from query URL request
+	// PerPage int `json:"-" gorm:"-" form:"per_page"` //no response or gorm but got from query URL request
+	// CreatedAtFrom string `json:"-" gorm:"-" form:"created_at_from" compareTime:"from,created_at"` //no response or gorm but got from query URL request
+	// CreatedAtTo   string `json:"-" gorm:"-" form:"created_at_to" binding:"required_with=CreatedAtFrom" compareTime:"to,created_at"` //no response or gorm but got from query URL request
 }
 //Auto create ID
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {

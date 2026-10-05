@@ -16,7 +16,7 @@ func RegisterValidatorUser() {
 var InRoleGroup validator.Func = func(fl validator.FieldLevel) bool {
   role, ok := fl.Field().Interface().(string)
   if ok {
-    validRoles := []string{"admin", "user", "manager"} 
+    validRoles := []string{"admin", "manager", "driver", "technician", "operator"} 
     for _, r := range validRoles {
       if role == r {
         return true

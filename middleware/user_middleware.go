@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"maintenance-system-go/database/redis"
+	"maintenance-system-go/helper"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,5 +35,23 @@ func (um *UserMiddleware) HasLogin() gin.HandlerFunc {
 		c.Set("current_user", user)
 
 		c.Next()
+	}
+}
+
+func (um *UserMiddleware) HasRoleToHandle(roles []string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		currentUser, err := helper.GetUserActive(c)
+		if err != nil  {
+			c.AbortWithStatusJSON(403, gin.H{"error": "Forbidden"})
+			return
+		}
+		
+		for _, role := range roles {
+			if currentUser.Role == role {
+				c.Next()
+				return
+			}
+		}
+		c.AbortWithStatusJSON(403, gin.H{"error": "No role to handle"})
 	}
 }

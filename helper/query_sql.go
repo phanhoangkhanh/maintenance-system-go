@@ -41,11 +41,15 @@ func GenerateWhereStruct[T any](model *T) models.Query {
 		return query
 	}
 	typ := value.Type()
-	for i := 0; i < value.NumField(); i++ {
+	// value.NumField() cannot access child imbed struct -> use : reflect.VisibleFields(typ) to access
+	//for i := 0; i < value.NumField(); i++ {
+	for _, key := range reflect.VisibleFields(typ){
+		field := value.FieldByIndex(key.Index)
+		//fmt.Printf("KEY: %v, Field: %v\n", key, field) 
+			//KEY: {Name  string json:"name" gorm:"column:name;uniqueIndex" form:"name" 0 [0] false}, Field: khanh
+			//KEY: {PerPage  int json:"-" gorm:"-" form:"per_page" 8 [10 1] false}, Field: 10
+			//KEY: {CreatedAtFrom  string json:"-" gorm:"-" form:"created_at_from" compareTime:"from,created_at" 16 [10 2] false}, Field:2026-09-19
 		condition := models.WhereClause{}
-		key := typ.Field(i) //key: {Name  string json:"name" gorm:"column:name;uniqueIndex" form:"name" 0 [0] false}
-		field := value.Field(i) // field: khanh
-		//Handle compare Time FROM_TO:
 		if key.Tag.Get("compareTime") != "" {
 			if field.Kind() != reflect.String || field.String() == "" {
 				continue

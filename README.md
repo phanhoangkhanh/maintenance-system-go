@@ -49,8 +49,11 @@
             Check request with cookies inside to confirm who is requested from browser
             Key was created via 'github.com/google/uuid' : go get github.com/google/uuid
 
-    8. Validate
-        https://pkg.go.dev/github.com/go-playground/validator/v10
+    iii. Dependencies
+        Validate
+            https://pkg.go.dev/github.com/go-playground/validator/v10
+        GORM:
+            special: Clause: https://gorm.io/gen/clause.html
 
 ## CORS cho UI gọi API bằng cookie
 

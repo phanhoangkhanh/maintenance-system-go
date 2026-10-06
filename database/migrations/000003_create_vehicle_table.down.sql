@@ -1,0 +1,3 @@
+
+DROP TABLE IF EXISTS vehicle_user;
+DROP TABLE IF EXISTS vehicles;

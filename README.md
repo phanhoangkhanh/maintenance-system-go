@@ -24,10 +24,7 @@
                 up
             (migrate -path database/migrations -database "$DATABASE_URL" up)
 
-            migrate
-                -path database/migrations
-                -database "$DATABASE_URL"
-                down 1
+            migrate -path database/migrations -database "$DATABASE_URL" down 1
 
     5. Structure
         Init App -> init App with real-struct

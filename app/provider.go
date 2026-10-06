@@ -8,6 +8,7 @@ import (
 	myredis "maintenance-system-go/database/redis"
 	"maintenance-system-go/middleware"
 	"maintenance-system-go/user"
+	"maintenance-system-go/vehicle"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -20,6 +21,7 @@ type App struct {
 	Database *gorm.DB
 	Config   *config.Config
 	User     *user.User
+	Vehicle  *vehicle.Vehicle
 	Router   *gin.Engine
 	Middleware *middleware.Middleware
 }
@@ -30,8 +32,10 @@ func InitApp() *App {
 
 	database := database.ConnectToDatabase(config)
 	redisClient := myredis.InitRedis(config)
+
 	// Register all Modules and Dependencies
 	user := user.InitUser(database, config, redisClient)
+	vehicle := vehicle.InitVehicle(database, config, redisClient, user.Repository) // inject real struct
 	middleware := middleware.InitMiddleware(redisClient)
 
 	return &App{
@@ -39,6 +43,7 @@ func InitApp() *App {
 		Database: database,
 		Config:   config,
 		User:     user,
+		Vehicle:  vehicle,
 		Middleware: middleware,
 	}
 }

@@ -70,14 +70,14 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 }
 
 func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
-	var user models.User
-	if err := c.ShouldBindQuery(&user); err != nil {
+	var userQuery models.User
+	if err := c.ShouldBindQuery(&userQuery); err != nil {
 		return nil, err, http.StatusBadRequest
 	}
-	query := helper.GenerateWhereStruct(&user)
+	query := helper.GenerateWhereStruct(&userQuery)
 	query.OrderBy = "created_at DESC , name ASC"
-	query.Page = user.Page
-	query.PerPage = user.PerPage
+	query.Page = userQuery.Page
+	query.PerPage = userQuery.PerPage
 	fmt.Printf("QUERY JSON %v\n", query)
 	
 	users, err := s.Repo.GetUser(query, c.Request.Context())

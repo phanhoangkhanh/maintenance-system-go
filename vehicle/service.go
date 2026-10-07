@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maintenance-system-go/database/redis"
+	"maintenance-system-go/helper"
 	"maintenance-system-go/models"
 
 	"github.com/gin-gonic/gin"
@@ -112,4 +113,21 @@ func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Cont
 		return nil, err, 500
 	}
 	return vehicleUser, nil, 200
+}
+
+func (service *Service) GetListVehicle(c *gin.Context) ([]models.Vehicle, error, int) {
+	var vehicleQuery models.Vehicle 
+	if err := c.ShouldBindQuery(&vehicleQuery); err != nil {
+		return nil, err, 400
+	}
+	query := helper.GenerateWhereStruct(&vehicleQuery)
+	query.OrderBy = "created_at DESC , kind ASC"
+	query.Page = vehicleQuery.Page
+	query.PerPage = vehicleQuery.PerPage
+
+	vehicles, err := service.Repo.GetVehicle(query, c.Request.Context())
+	if err != nil {
+		return nil, err, 500
+	}
+	return vehicles, nil, 200
 }

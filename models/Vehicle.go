@@ -7,6 +7,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// For get query and model
+
 type Vehicle struct {
 	ID string `json:"id" gorm:"column:id;primaryKey" form:"id"`
 	Kind string `json:"kind" gorm:"column:kind" form:"kind"`
@@ -18,6 +20,9 @@ type Vehicle struct {
 	DeletedAt *time.Time `json:"deleted_at" gorm:"column:deleted_at" form:"deleted_at"` 
 
 	GetQueryParams
+
+	DriverAttach []User `json:"driver_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:DriverID"`
+	OperatorAttach []User `json:"operator_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:OperatorID"`
 }
 
 //Auto create ID

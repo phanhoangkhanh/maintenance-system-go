@@ -29,10 +29,14 @@ func (repo *Repository) GetVehicle(whereStruct models.Query, c context.Context) 
 	if err != nil {
 		return nil, err
 	}
+	//Many to many
+	query = query.Preload("DriverAttach").Preload("OperatorAttach")
 	// Execute the query
 	if err := query.Find(&vehicles).Error; err != nil {
 		return nil, err
 	}
+	
+
 	return vehicles, nil
 }
 

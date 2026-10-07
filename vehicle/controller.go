@@ -49,3 +49,13 @@ func (controller *Controller) AttachVehicle(c *gin.Context) {
 	}
 	res.ResponseClient(c, 200, "Attach Vehicle successful", vehicleUser)
 }
+
+func (controller *Controller) GetListVehicle(c *gin.Context) {
+	vehicles, err, statusError := controller.Service.GetListVehicle(c)
+	if err != nil {
+		log.Printf("GetListVehicle got error: %s\n", err)
+		res.ResponseClient(c, statusError, "GetListVehicle failed", err.Error())
+		return
+	}
+	res.ResponseClient(c, 200, "Get List Vehicle successful", vehicles)
+}

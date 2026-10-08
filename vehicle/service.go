@@ -125,6 +125,16 @@ func (service *Service) GetListVehicle(c *gin.Context) ([]models.Vehicle, error,
 	query.Page = vehicleQuery.Page
 	query.PerPage = vehicleQuery.PerPage
 
+
+	//Special query with eager table 
+	if vehicleQuery.DriverName != "" ||  vehicleQuery.OperatorName != ""{
+		vehicles, err := service.Repo.GetVehicleWithConditionEager(query, c.Request.Context(), vehicleQuery.DriverName, vehicleQuery.OperatorName)
+		if err != nil {
+			return nil, err, 500
+		}
+		return vehicles, nil, 200
+	}
+	//NOrmal query 
 	vehicles, err := service.Repo.GetVehicle(query, c.Request.Context())
 	if err != nil {
 		return nil, err, 500

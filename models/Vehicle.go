@@ -23,6 +23,9 @@ type Vehicle struct {
 
 	DriverAttach []User `json:"driver_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:DriverID"`
 	OperatorAttach []User `json:"operator_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:OperatorID"`
+
+	DriverName string `json:"driver_name" gorm:"-" form:"driver_name"`
+	OperatorName string `json:"operator_name" gorm:"-" form:"operator_name"`
 }
 
 //Auto create ID

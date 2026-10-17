@@ -30,6 +30,13 @@
         Init App -> init App with real-struct
         Every module-struct must be Init in each provider inside module
 
+        Reverse Init :
+            Each module have : repo + service + validator + controller +...
+            Declare struct repo + service + validator + controller +... first
+            Declare all structs into provider of each module + init function
+            Init all module in kernel provider
+
+
     6. Install Redis via Docker
         Os linux + open Docker Deskhop dowload img Redis: docker pull redis:7.4-alpine
         In DockerDeskhop -> build img to container + setup params

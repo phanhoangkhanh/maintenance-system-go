@@ -26,5 +26,10 @@ func (r *Router) RegisterAPIRoutes(app *app.App) {
 		hasLoginRoute.GET("/vehicle", vehicleController.GetListVehicle)
 		hasLoginRoute.POST("/vehicle", userMiddleware.HasRoleToHandle([]string{"admin", "technician"}), vehicleController.CreateOrUpdateVehicle)
 		hasLoginRoute.POST("/attach-vehicle", userMiddleware.HasRoleToHandle([]string{"admin", "manager"}), vehicleController.AttachVehicle)
+
+		//Customer
+		customerController := app.Customer.Controller
+		//hasLoginRoute.GET("/customer", customerController.GetListCustomer)
+		hasLoginRoute.POST("/customer", userMiddleware.HasRoleToHandle([]string{"admin", "manager"}), customerController.CreateOrUpdateCustomer)
 	}
 }

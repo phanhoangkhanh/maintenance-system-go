@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"maintenance-system-go/config"
+	"maintenance-system-go/customer"
 	database "maintenance-system-go/database/connect"
 	myredis "maintenance-system-go/database/redis"
 	"maintenance-system-go/middleware"
@@ -22,6 +23,7 @@ type App struct {
 	Config   *config.Config
 	User     *user.User
 	Vehicle  *vehicle.Vehicle
+	Customer *customer.Customer
 	Router   *gin.Engine
 	Middleware *middleware.Middleware
 }
@@ -36,6 +38,8 @@ func InitApp() *App {
 	// Register all Modules and Dependencies
 	user := user.InitUser(database, config, redisClient)
 	vehicle := vehicle.InitVehicle(database, config, redisClient, user.Repository) // inject real struct
+	customer := customer.InitCustomer(database, config) // inject real struct
+
 	middleware := middleware.InitMiddleware(redisClient)
 
 	return &App{
@@ -44,6 +48,7 @@ func InitApp() *App {
 		Config:   config,
 		User:     user,
 		Vehicle:  vehicle,
+		Customer: customer,
 		Middleware: middleware,
 	}
 }

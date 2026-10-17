@@ -16,6 +16,7 @@ type CreateOrUpdateUserRequest struct {
 	Role     string `form:"role" json:"role" binding:"required_if=Kind create,omitempty,inRoleGroup"`
 	Status   string `form:"status" json:"status" binding:"required_if=Kind create,omitempty,oneof=ok progress delete"`
 	Mobile   string `form:"mobile" json:"mobile" binding:"required_if=Kind create,omitempty,number"`
+	Code     string `form:"code" json:"code" binding:"required_if=Kind create"`
 }
 
 func (r CreateOrUpdateUserRequest) FromRequestToNewUser(passwordHash string) *models.User {

@@ -34,7 +34,7 @@
             Each module have : repo + service + validator + controller +...
             Declare struct repo + service + validator + controller +... first
             Declare all structs into provider of each module + init function
-            Init all module in kernel provider
+            Init all module in kernel container (app/container)
 
 
     6. Install Redis via Docker

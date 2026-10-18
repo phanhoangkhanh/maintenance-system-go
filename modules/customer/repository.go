@@ -2,6 +2,7 @@ package customer
 
 import (
 	"context"
+	"maintenance-system-go/helper"
 	"maintenance-system-go/models"
 
 	"gorm.io/gorm"
@@ -42,4 +43,19 @@ func (repo *Repository) Create(request *CustomerRequest, ctx context.Context) (*
 		return nil, err
 	}
 	return customer, nil
+}
+
+func (repo *Repository) GetCustomer(whereStruct models.Query, c context.Context) ([]models.Customer, error) {
+	var customers []models.Customer
+	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Customer{})
+	if err != nil {
+		return nil, err
+	}
+	// Execute the query
+	if err := query.Find(&customers).Error; err != nil {
+		return nil, err
+	}
+	
+
+	return customers, nil
 }

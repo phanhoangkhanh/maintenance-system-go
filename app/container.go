@@ -4,12 +4,13 @@ import (
 	"fmt"
 	"log"
 	"maintenance-system-go/config"
-	"maintenance-system-go/customer"
 	database "maintenance-system-go/database/connect"
 	myredis "maintenance-system-go/database/redis"
 	"maintenance-system-go/middleware"
-	"maintenance-system-go/user"
-	"maintenance-system-go/vehicle"
+	"maintenance-system-go/modules/customer"
+	"maintenance-system-go/modules/plan"
+	"maintenance-system-go/modules/user"
+	"maintenance-system-go/modules/vehicle"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -24,6 +25,7 @@ type App struct {
 	User     *user.User
 	Vehicle  *vehicle.Vehicle
 	Customer *customer.Customer
+	Plan     *plan.Plan
 	Router   *gin.Engine
 	Middleware *middleware.Middleware
 }
@@ -39,6 +41,7 @@ func InitApp() *App {
 	user := user.InitUser(database, config, redisClient)
 	vehicle := vehicle.InitVehicle(database, config, redisClient, user.Repository) // inject real struct
 	customer := customer.InitCustomer(database, config) // inject real struct
+	plan := plan.InitPlan(database, config, user.Repository, customer.Repository, vehicle.Repository) // inject real struct Repo
 
 	middleware := middleware.InitMiddleware(redisClient)
 
@@ -49,6 +52,7 @@ func InitApp() *App {
 		User:     user,
 		Vehicle:  vehicle,
 		Customer: customer,
+		Plan:     plan,
 		Middleware: middleware,
 	}
 }

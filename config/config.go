@@ -11,6 +11,7 @@ type Config struct {
 	Database DatabaseConfig
 	Redis    RedisConfig
 	CORS     CORSConfig
+	TradingWS TradingWSConfig
 }
 
 func LoadConfig() *Config {
@@ -25,5 +26,6 @@ func LoadConfig() *Config {
 		Database: LoadDBConfig(),
 		Redis:    LoadRedisConfig(),
 		CORS:     LoadCORSConfig(),
+		TradingWS: LoadTradingWSConfig(),
 	}
 }

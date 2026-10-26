@@ -11,6 +11,7 @@ import (
 	"maintenance-system-go/modules/plan"
 	"maintenance-system-go/modules/user"
 	"maintenance-system-go/modules/vehicle"
+	"maintenance-system-go/tradingSocket"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,10 +29,11 @@ type App struct {
 	Plan     *plan.Plan
 	Router   *gin.Engine
 	Middleware *middleware.Middleware
+	Trading *tradingSocket.Trading
 }
 
 func InitApp() *App {
-
+	//Load all config params
 	config := config.LoadConfig()
 
 	database := database.ConnectToDatabase(config)
@@ -45,6 +47,11 @@ func InitApp() *App {
 
 	middleware := middleware.InitMiddleware(redisClient)
 
+	//Trading socket 
+	trading := tradingSocket.InitTrading(database, config, redisClient)
+	//Init routine to keep socket connection alive
+	go trading.Service.ConnectWebsocket()
+
 	return &App{
 		Redis:    redisClient,
 		Database: database,
@@ -54,6 +61,7 @@ func InitApp() *App {
 		Customer: customer,
 		Plan:     plan,
 		Middleware: middleware,
+		Trading: trading,
 	}
 }
 
@@ -75,8 +83,18 @@ func (app *App) CloseApp() {
 		}
 	}
 
+	
+	//Close trading socket connection if exists
+	if app.Trading != nil && app.Trading.Service != nil && app.Trading.Service.Conn != nil {
+		if err := app.Trading.Service.Conn.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("close trading socket: %w", err))
+		}
+	}
+
+
 	if len(errs) > 0 {
 		log.Printf("cleanup app: %v", errs)
+		panic("We got error , but push to close App")
 	}
 }
 

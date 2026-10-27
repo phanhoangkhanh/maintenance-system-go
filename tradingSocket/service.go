@@ -20,6 +20,7 @@ type Service struct {
 	Conn           *websocket.Conn
 	lock           sync.Mutex
 	IsReconnecting bool
+	BridgeChannel chan MarketPriceInfo
 }
 
 func (ts *Service) ConnectWebsocket() {
@@ -110,8 +111,10 @@ func (ts *Service) ConnectWebsocket() {
 					continue
 				}
 
-				key := "S-SYSTEM-SYMBOL-" + price.Symbol
-				fmt.Printf("GOT: %s  %#v\n", key, price)
+				//key := "S-SYSTEM-SYMBOL-" + price.Symbol
+				//fmt.Printf("GOT: %s  %#v\n", key, price)
+				// Send the price info to the bridge channel
+				ts.BridgeChannel <- price
 			}
 
 			// Close for together with monitoring routine if waiting more than 70s

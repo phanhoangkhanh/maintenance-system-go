@@ -3,6 +3,7 @@ package app
 import (
 	"fmt"
 	"log"
+	broadcastsocket "maintenance-system-go/broadcastSocket"
 	"maintenance-system-go/config"
 	database "maintenance-system-go/database/connect"
 	myredis "maintenance-system-go/database/redis"
@@ -32,6 +33,10 @@ type App struct {
 	Trading *tradingSocket.Trading
 }
 
+//Initial Bridge Channel for 2 Sockets 
+//This Channel be used to transfer trading-socket info to broadcast-socket to let FE can access info
+var BridgeChannel = make(chan tradingSocket.MarketPriceInfo, 1000) 
+
 func InitApp() *App {
 	//Load all config params
 	config := config.LoadConfig()
@@ -47,10 +52,16 @@ func InitApp() *App {
 
 	middleware := middleware.InitMiddleware(redisClient)
 
+
+	
 	//Trading socket 
-	trading := tradingSocket.InitTrading(database, config, redisClient)
+	trading := tradingSocket.InitTrading(database, config, redisClient, BridgeChannel)
 	//Init routine to keep socket connection alive
-	go trading.Service.ConnectWebsocket()
+	go trading.Service.ConnectWebsocket() 
+
+	//Broadcast socket
+	broadcast := broadcastsocket.InitBroadCast(config, BridgeChannel)
+	go broadcast.Service.CreatAndBroadcastSocket()
 
 	return &App{
 		Redis:    redisClient,

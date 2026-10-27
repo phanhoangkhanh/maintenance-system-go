@@ -14,11 +14,12 @@ type Trading struct {
 }
 
 
-func InitTrading(db *gorm.DB, config *config.Config, redisClient *redis.RedisClient) *Trading {
+func InitTrading(db *gorm.DB, config *config.Config, redisClient *redis.RedisClient, BridgeChannel chan MarketPriceInfo) *Trading {
 
 	service := &Service{
 		Redis: redisClient,
 		Config:   config,
+		BridgeChannel:  BridgeChannel,
 	}
 
 	return &Trading{

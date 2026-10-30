@@ -29,7 +29,16 @@ type Client struct {
 	isReady      bool // flag to indicate if the client is ready
 }
 
-var clients []*Client
+
+type ClientList struct {
+	clients []*Client
+	lock    sync.Mutex
+}
+// use Struct with lock to make sure no data-race occurs when accessing the clients list from many goroutines
+var clientList = &ClientList{
+	clients: []*Client{},
+	lock:    sync.Mutex{},
+}
 
 func (s *Service) CreatAndBroadcastSocket()  {
 
@@ -48,7 +57,7 @@ func (s *Service) CreatAndBroadcastSocket()  {
 		}
 		
 
-		//create new Client struct
+		//create new Client struct for each request connection
 		newClient := &Client{
 			conn:       webConn,
 			msgSend:       make(chan tradingSocket.MarketPriceInfo, 1000),
@@ -56,7 +65,9 @@ func (s *Service) CreatAndBroadcastSocket()  {
 			isReady:      false,
 		}
 		// add new client to the list of clients
-		clients = append(clients, newClient)
+		clientList.lock.Lock()
+		clientList.clients = append(clientList.clients, newClient)
+		clientList.lock.Unlock()
 
 		//Keep reading from and writing to the client in separate goroutines
 		go ReadFromClient(newClient)
@@ -67,17 +78,18 @@ func (s *Service) CreatAndBroadcastSocket()  {
 }
 
 func multipleMsgToClients(Broadcast chan tradingSocket.MarketPriceInfo) {
-
-	//get out msg from channel
+	//get per message from channel
 	for msg := range Broadcast {
 		// 1 msg from the broadcast channel, multiple clients receive it
-		for _, client := range clients {
+		clientList.lock.Lock()
+		for _, client := range clientList.clients {
 			client.msgSend <- msg
 		}
+		clientList.lock.Unlock()
 	}
-	
 }
 
+//When client disconnect -> ReadFromClient recognizes it and removes the client from the list
 func ReadFromClient(client *Client) {
 	defer client.conn.Close() // close connect of this client
 	defer removeClient( client) // remove client from the list of clients when done
@@ -119,10 +131,13 @@ func WriteToClient(client *Client) {
 }
 
 func removeClient( client *Client) {
-	for i, c := range clients {
+	clientList.lock.Lock()
+	
+	for i, c := range clientList.clients {
 		if c == client {
-			clients = append(clients[:i], clients[i+1:]...)
+			clientList.clients = append(clientList.clients[:i], clientList.clients[i+1:]...)
 			break
 		}
 	}
+	clientList.lock.Unlock()
 }

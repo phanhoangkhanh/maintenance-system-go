@@ -74,7 +74,7 @@ func (s *Service) CreatAndBroadcastSocket()  {
 				close(client.signalDone)
 				
 				removeClientFromList(client)
-				log.Println("remove client now....")
+				log.Println("remove client done....")
 			})
 		}
 
@@ -105,7 +105,9 @@ func multipleMsgToClients(Broadcast chan tradingSocket.MarketPriceInfo) {
 	for msg := range Broadcast {
 		// 1 msg from the broadcast channel, multiple clients receive it
 		clientList.lock.Lock()
-		for _, client := range clientList.clients {
+		snapshot := append([]*Client(nil), clientList.clients...) // use a snapshot to avoid holding the lock while sending messages to clients
+		clientList.lock.Unlock()
+		for _, client := range snapshot {
 			//This simple way will let client msgSend be fulled even 1000 buffer and block everything
 			//client.msgSend <- msg
 			select {
@@ -117,7 +119,6 @@ func multipleMsgToClients(Broadcast chan tradingSocket.MarketPriceInfo) {
 					continue
 			}
 		}
-		clientList.lock.Unlock()
 	}
 }
 
@@ -140,7 +141,12 @@ func ReadFromClient(client *Client) {
 				if msg["login"] == "KHANH SECRET" {
 					messageSuccess := "Login successfully"
 					client.lock.Lock()
-					client.conn.WriteJSON(map[string]string{"message": messageSuccess})
+					err := client.conn.WriteJSON(map[string]string{"message": messageSuccess})
+					if err != nil {
+						log.Printf("Error writing to client: %s\n", err)
+						client.lock.Unlock()
+						return
+					}
 					client.isReady = true
 					client.lock.Unlock()
 				}

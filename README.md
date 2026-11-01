@@ -36,6 +36,13 @@
             Declare all structs into provider of each module + init function
             Init all module in kernel container (app/container)
 
+            Controller:  check bind/validate , shouldBind ,..
+                            => collect request params + ctx (not gin) ->services
+            Service:    Check logic -> call repository with ctx => return response,err
+            Repository: I/O database => return query, err
+            Controller: Collect response -> reply to customer request
+
+
 
     6. Install Redis via Docker
         Os linux + open Docker Deskhop dowload img Redis: docker pull redis:7.4-alpine
@@ -53,6 +60,11 @@
             Check request with cookies inside to confirm who is requested from browser
             Key was created via 'github.com/google/uuid' : go get github.com/google/uuid
 
+    8. Set timeout for all context => /go/routers/router.go
+        ginRouter := gin.Default()
+        //Context for Time out ->pass to all flow
+        ginRouter.Use(timeoutMiddleware(2 * time.Second))
+
     iii. Dependencies
         Validate
             https://pkg.go.dev/github.com/go-playground/validator/v10
@@ -66,24 +78,3 @@ Khai báo trong `.env` (local), hoặc biến môi trường khi `ENV=prod`:
 ```dotenv
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://app.example.com
 ```
-
-Thay `https://app.example.com` bằng origin UI thực tế. Mỗi origin gồm scheme,
-host và port nếu có; không kèm path hoặc dấu `/` cuối. Không dùng `*`.
-Danh sách là các địa chỉ UI gọi API, không phải URL API đích.
-Local mặc định cho phép hai origin localhost trên khi chưa cấu hình;
-production không cho phép cross-origin nếu danh sách trống.
-
-Frontend cần `credentials: "include"` cho cả login và các request sau:
-
-```js
-fetch("https://api.example.com/login", {
-  method: "POST",
-  credentials: "include",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ name, password }),
-});
-```
-
-Middleware trả origin khớp request, cho phép credentials và xử lý preflight
-OPTIONS. CORS không thay thế chính sách cookie: UI/API khác site cần
-`SameSite=None; Secure` và vẫn chịu chính sách cookie bên thứ ba của browser.

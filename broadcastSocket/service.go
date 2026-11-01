@@ -6,6 +6,7 @@ import (
 	"maintenance-system-go/tradingSocket"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -58,7 +59,7 @@ func (s *Service) CreatAndBroadcastSocket()  {
 	//2 - This HandleFunc will be called each time has one request call to '/ws' socket
 	//each time user connect. ->call 1 time and create new 1 client
 	http.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
-		//Upgrate to socket
+		//Upgrate to socket -> handshake with the client
 		webConn, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			log.Printf("Fail to upgrate http request to socket, %s\n", err)
@@ -101,7 +102,9 @@ func (s *Service) CreatAndBroadcastSocket()  {
 }
 
 func multipleMsgToClients(Broadcast chan tradingSocket.MarketPriceInfo) {
-	//get per message from channel
+	//get per message from channel 
+	// gorountine block -> keep waiting for msg -> will end when channel is closed and all messages are processed
+	// Channel empty but not closed, will keep waiting for new messages
 	for msg := range Broadcast {
 		// 1 msg from the broadcast channel, multiple clients receive it
 		clientList.lock.Lock()
@@ -111,6 +114,8 @@ func multipleMsgToClients(Broadcast chan tradingSocket.MarketPriceInfo) {
 			//This simple way will let client msgSend be fulled even 1000 buffer and block everything
 			//client.msgSend <- msg
 			select {
+				// routine block -> wait client.signalDone or client.msgSend 
+				// 		-> cannot do that -> default -> close client
 				case client.msgSend <- msg: //if can send more msg to client , just do it
 				case <-client.signalDone: // if client is closed, skip sending
 					continue
@@ -132,6 +137,7 @@ func ReadFromClient(client *Client) {
 				return //close the goroutine ReadFromClient when client is done
 			default:
 				var msg map[string]string
+				//also goroutine block -> will wait for client to send a message
 				err := client.conn.ReadJSON(&msg)
 				if err != nil {
 					log.Printf("Error reading from client: %s\n", err)
@@ -141,6 +147,12 @@ func ReadFromClient(client *Client) {
 				if msg["login"] == "KHANH SECRET" {
 					messageSuccess := "Login successfully"
 					client.lock.Lock()
+					
+					if err := client.conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+						log.Printf("Error setting client write deadline: %s\n", err)
+						client.lock.Unlock()
+						return
+					}
 					err := client.conn.WriteJSON(map[string]string{"message": messageSuccess})
 					if err != nil {
 						log.Printf("Error writing to client: %s\n", err)
@@ -157,6 +169,7 @@ func ReadFromClient(client *Client) {
 func WriteToClient(client *Client) {
 	defer client.callCloseNow(client) // close connect of this client
 	for{
+		// routine block -> wait client.signalDone or client.msgSend (no default so keep waiting 2 channels)
 		select{
 			case <-client.signalDone:
 				return	//close the goroutine WriteToClient if client is done
@@ -166,6 +179,13 @@ func WriteToClient(client *Client) {
 					client.lock.Unlock()
 					continue
 				}
+				//Set deadline for writing to the client to avoid blocking indefinitely
+				if err := client.conn.SetWriteDeadline(time.Now().Add(10 * time.Second)); err != nil {
+					log.Printf("Error setting client write deadline: %s\n", err)
+					client.lock.Unlock()
+					return
+				}
+				//also goroutine block 
 				err := client.conn.WriteJSON(msg)
 				if err != nil {
 					log.Printf("Error writing to client: %s\n", err)

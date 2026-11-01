@@ -1,6 +1,8 @@
 package app
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"log"
 	broadcastsocket "maintenance-system-go/broadcastSocket"
@@ -13,6 +15,8 @@ import (
 	"maintenance-system-go/modules/user"
 	"maintenance-system-go/modules/vehicle"
 	"maintenance-system-go/tradingSocket"
+	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -28,9 +32,10 @@ type App struct {
 	Vehicle  *vehicle.Vehicle
 	Customer *customer.Customer
 	Plan     *plan.Plan
-	Router   *gin.Engine
+	HTTPServer *http.Server // for router init
 	Middleware *middleware.Middleware
 	Trading *tradingSocket.Trading
+	BroadcastSocket *broadcastsocket.BroadCastSocket
 }
 
 //Initial Bridge Channel for 2 Sockets 
@@ -52,16 +57,12 @@ func InitApp() *App {
 
 	middleware := middleware.InitMiddleware(redisClient)
 
-
-	
 	//Trading socket 
 	trading := tradingSocket.InitTrading(database, config, redisClient, BridgeChannel)
-	//Init routine to keep socket connection alive
-	go trading.Service.ConnectWebsocket() 
-
+	
 	//Broadcast socket
 	broadcast := broadcastsocket.InitBroadCast(config, BridgeChannel)
-	go broadcast.Service.CreatAndBroadcastSocket()
+	
 
 	return &App{
 		Redis:    redisClient,
@@ -73,7 +74,44 @@ func InitApp() *App {
 		Plan:     plan,
 		Middleware: middleware,
 		Trading: trading,
+		BroadcastSocket: broadcast,
 	}
+}
+
+func (app *App) RunApp(engine *gin.Engine, ctxclosed context.Context) error{
+
+
+	//Run Socket keep listen trading socket
+	go app.Trading.Service.ConnectWebsocket() 
+	// Run socket to broadcast trading info to clients
+	go app.BroadcastSocket.Service.CreatAndBroadcastSocket()
+
+	//Keep wait ctxClosed
+	go func(){
+		for{
+			select{
+				case <-ctxclosed.Done():
+					log.Println("Context closed, shutting down...")
+					app.CloseApp()
+					return
+				default:
+			}
+		}
+	}()
+
+	// Run HTTP server
+	app.HTTPServer = &http.Server{
+		Addr:              ":8080",
+        Handler:           engine,
+        ReadHeaderTimeout: 5 * time.Second,
+	}
+	//Keep main goroutine running to serve HTTP and sockets
+	err := app.HTTPServer.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+        return fmt.Errorf("serve HTTP: %w", err)
+    }
+
+    return nil
 }
 
 func (app *App) CloseApp() {
@@ -83,6 +121,7 @@ func (app *App) CloseApp() {
 		if err := app.Redis.Close(); err != nil {
 			errs = append(errs, fmt.Errorf("close redis: %w", err))
 		}
+		log.Println("Close redis connection")
 	}
 
 	if app.Database != nil {
@@ -92,6 +131,7 @@ func (app *App) CloseApp() {
 		} else if err := sqlDB.Close(); err != nil {
 			errs = append(errs, fmt.Errorf("close database: %w", err))
 		}
+		log.Println("Close database connection")
 	}
 
 	
@@ -100,6 +140,20 @@ func (app *App) CloseApp() {
 		if err := app.Trading.Service.Conn.Close(); err != nil {
 			errs = append(errs, fmt.Errorf("close trading socket: %w", err))
 		}
+		log.Println("Close trading socket connection")
+	}
+
+	//Close broadcast socket connection if exists
+	if app.BroadcastSocket != nil && app.BroadcastSocket.Service != nil && app.BroadcastSocket.Service.Conn != nil {
+		if err := app.BroadcastSocket.Service.Conn.Close(); err != nil {
+			errs = append(errs, fmt.Errorf("close broadcast socket: %w", err))
+		}
+		log.Println("Close broadcast socket connection")
+	}
+	// close BridgeChannel if exists and still open
+	if BridgeChannel != nil {
+		close(BridgeChannel)
+		log.Println("Close BridgeChannel")
 	}
 
 

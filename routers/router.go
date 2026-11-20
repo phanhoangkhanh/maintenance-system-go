@@ -43,7 +43,7 @@ func corsMiddleware(cfg config.CORSConfig) gin.HandlerFunc {
 		return slices.Contains(cfg.AllowedOrigins, origin)
 	}
 	options.AllowCredentials = true
-	options.AllowHeaders = []string{"Origin", "Content-Type", "Authorization"}
+	options.AllowHeaders = []string{"Origin", "Content-Type", "Authorization", "Interceptor"}
 	return cors.New(options)
 }
 

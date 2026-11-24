@@ -26,6 +26,7 @@ func (r CreateOrUpdateUserRequest) FromRequestToNewUser(passwordHash string) *mo
 		MobilePhone: r.Mobile,
 		Role:        r.Role,
 		Status:      r.Status,
+		Code:        r.Code,
 	}
 	if passwordHash != "" {
 		user.Password = passwordHash

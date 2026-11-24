@@ -90,17 +90,17 @@ func InitRepository(db *gorm.DB) *Repository {
 // 	return users, nil
 // }
 
-func (repo *Repository) GetUser(whereStruct models.Query, c context.Context) ([]models.User, error) {
+func (repo *Repository) GetUser(whereStruct models.Query, c context.Context) ([]models.User, int64, error) {
 	var users []models.User
-	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.User{})
+	query, total, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.User{})
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	// Execute the query
 	if err := query.Find(&users).Error; err != nil {
-		return nil, err
+		return nil, 0, err
 	}
-	return users, nil
+	return users, total, nil
 }
 
 func (repo *Repository) CreateUser(user *models.User, c context.Context) (*models.User, error) {

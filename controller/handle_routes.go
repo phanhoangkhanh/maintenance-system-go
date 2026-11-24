@@ -7,6 +7,6 @@ import (
 var validate *validator.Validate
 
 func HandleTest(c *gin.Context) {
-	ResponseClient(c, 200, "Test route is working", nil)
+	ResponseClient(c, 200, "Test route is working", nil, 0)
 }
 

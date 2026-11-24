@@ -116,15 +116,15 @@ func GenerateWhereStruct[T any](model *T) models.Query {
 	return query
 }
 // Using Clause to more dynamic control all conditions
-func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c context.Context, modelName T) (*gorm.DB, error) {
+func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c context.Context, modelName T) (*gorm.DB, int64 ,error) {
 
 	if whereStruct.Page < 0 || whereStruct.PerPage < 0 {
-		return nil, fmt.Errorf("limit and pagination must not be negative")
+		return nil, 0, fmt.Errorf("limit and pagination must not be negative")
 	}
 	query := db.WithContext(c).Model(&modelName)
 	//1 - COnfirm parse the T model before building the query
 	if err := query.Statement.Parse(&modelName); err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	//struture of whereClause need build :
 	// whereClause := clause.Where{
@@ -170,15 +170,22 @@ func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c context.Con
 				Vars: []interface{}{col, condition.Value},
 			})
 		default:
-			return nil, fmt.Errorf("unsupported comparison: %q", condition.Compare)
+			return nil,0, fmt.Errorf("unsupported comparison: %q", condition.Compare)
 		}
 	}
+
+	//2.1 - Count total records for pagination
+	var total int64
+	// query.Session(&gorm.Session{}) - clone query , keep query at pure for execute later
+	if err := query.Session(&gorm.Session{}).Count(&total).Error; err != nil {
+    return nil, 0, err
+}
 	//3 - Order By
 	if strings.TrimSpace(whereStruct.OrderBy) != "" {
 		for _, order := range strings.Split(whereStruct.OrderBy, ",") {
 			parts := strings.Fields(order)
 			if len(parts) < 1 || len(parts) > 2 {
-				return nil, fmt.Errorf("invalid order by: %q", order)
+				return nil,0, fmt.Errorf("invalid order by: %q", order)
 			}
 			col := clause.Column{Name: parts[0]}
 
@@ -187,7 +194,7 @@ func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c context.Con
 				direction = strings.ToUpper(parts[1])
 			}
 			if direction != "ASC" && direction != "DESC" {
-				return nil, fmt.Errorf("invalid order direction: %q", parts[1])
+				return nil,0, fmt.Errorf("invalid order direction: %q", parts[1])
 			}
 			query = query.Order(clause.OrderByColumn{Column: col, Desc: direction == "DESC"})
 		}
@@ -204,5 +211,5 @@ func GrandGetAllInfo[T any](db *gorm.DB, whereStruct models.Query, c context.Con
 		offset := (page - 1) * pageSize
 		query = query.Offset(offset).Limit(pageSize)
 	}
-	return query, nil
+	return query, total, nil
 }

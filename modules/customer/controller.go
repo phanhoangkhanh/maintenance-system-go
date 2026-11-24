@@ -16,16 +16,16 @@ func (controller *Controller) CreateOrUpdateCustomer(c *gin.Context) {
 	var request CustomerRequest
 	err := c.ShouldBind(&request)
 	if err != nil {
-		res.ResponseClient(c, http.StatusBadRequest, "Request params not valid", err.Error())
+		res.ResponseClient(c, http.StatusBadRequest, "Request params not valid", err.Error(), 0)
 		return
 	}
 	service := controller.Service
 
 	customer, err, statusError := service.CreateCustomer(&request, c.Request.Context())
 	if err != nil {
-		res.ResponseClient(c, statusError, "Failed to create customer", err.Error())
+		res.ResponseClient(c, statusError, "Failed to create customer", err.Error(), 0)
 		return
 	}
-	res.ResponseClient(c, http.StatusOK, "Customer created successfully", customer)
+	res.ResponseClient(c, http.StatusOK, "Customer created successfully", customer, 0)
 
 }

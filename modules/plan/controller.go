@@ -30,7 +30,7 @@ func (controller *Controller) CreatePlan(c *gin.Context) {
 						gin.H{
 							"field":       "customer",
 							"description": "No customer found with this name",
-						},
+						}, 0,
 					)
 					return
 				}
@@ -44,7 +44,7 @@ func (controller *Controller) CreatePlan(c *gin.Context) {
 						gin.H{
 							"field":       "number_vehicle",
 							"description": "No vehicle found with this number",
-						},
+						},0,
 					)
 					return
 				}
@@ -58,8 +58,7 @@ func (controller *Controller) CreatePlan(c *gin.Context) {
 						gin.H{
 							"field":       "driver_code",
 							"description": "No driver found with this code",
-						},
-					)
+						},0)
 					return
 				}
 
@@ -67,14 +66,14 @@ func (controller *Controller) CreatePlan(c *gin.Context) {
 			}
 		}
 	
-		res.ResponseClient(c, http.StatusBadRequest, "Request params not valid", err.Error())
+		res.ResponseClient(c, http.StatusBadRequest, "Request params not valid", err.Error(), 0)
 		return
 	}
 	service := controller.Service
 	plan, err, statusCode := service.CreatePlan(&request, c)
 	if err != nil {
-		res.ResponseClient(c, statusCode, "Failed to create plan", err.Error())
+		res.ResponseClient(c, statusCode, "Failed to create plan", err.Error(), 0)
 		return
 	}
-	res.ResponseClient(c, statusCode, "Plan created successfully", plan) 
+	res.ResponseClient(c, statusCode, "Plan created successfully", plan, 0) 
 }

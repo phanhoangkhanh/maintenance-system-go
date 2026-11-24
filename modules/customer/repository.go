@@ -47,7 +47,7 @@ func (repo *Repository) Create(request *CustomerRequest, ctx context.Context) (*
 
 func (repo *Repository) GetCustomer(whereStruct models.Query, c context.Context) ([]models.Customer, error) {
 	var customers []models.Customer
-	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Customer{})
+	query, _,err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Customer{})
 	if err != nil {
 		return nil, err
 	}

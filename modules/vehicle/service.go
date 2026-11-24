@@ -11,7 +11,7 @@ import (
 )
 
 type UserRepoInterface interface {
-	GetUser(whereStruct models.Query, c context.Context) ([]models.User, error)
+	GetUser(whereStruct models.Query, c context.Context) ([]models.User, int64,error)
 } 
 
 type Service struct {
@@ -72,7 +72,7 @@ func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Cont
 		Page: 1,
 		PerPage: 1,
 	}
-	operator, err := service.UserRepo.GetUser(*queryVehicle, c.Request.Context())
+	operator, _, err := service.UserRepo.GetUser(*queryVehicle, c.Request.Context())
 	if err != nil {
 		return nil, err, 500
 	}
@@ -92,7 +92,7 @@ func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Cont
 		Page: 1,
 		PerPage: 1,
 	}
-	driver, err := service.UserRepo.GetUser(*queryVehicle, c.Request.Context())
+	driver, _, err := service.UserRepo.GetUser(*queryVehicle, c.Request.Context())
 	if err != nil {
 		return nil, err, 500
 	}

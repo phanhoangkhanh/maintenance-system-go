@@ -25,7 +25,7 @@ func (repo *Repository) CreateVehicle(vehicle *models.Vehicle, c context.Context
 
 func (repo *Repository) GetVehicle(whereStruct models.Query, c context.Context) ([]models.Vehicle, error) {
 	var vehicles []models.Vehicle
-	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Vehicle{})
+	query, _, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Vehicle{})
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (repo *Repository) GetVehicle(whereStruct models.Query, c context.Context) 
 
 func (repo *Repository) GetVehicleWithConditionEager(whereStruct models.Query, c context.Context, driverName string, operatorName string) ([]models.Vehicle, error) {
 	var vehicles []models.Vehicle
-	query, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Vehicle{})
+	query, _, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Vehicle{})
 	if err != nil {
 		return nil, err
 	}

@@ -10,13 +10,13 @@ import (
 )
 
 type UserRepository interface{
-	GetUser(whereStruct models.Query, c context.Context) ([]models.User, error)
+	GetUser(whereStruct models.Query, c context.Context) ([]models.User,int64, error)
 }
 type CustomerRepository interface{
 	GetCustomer(whereStruct models.Query, c context.Context) ([]models.Customer, error)
 }
 type VehicleRepository interface{
-	GetVehicle(whereStruct models.Query, c context.Context) ([]models.Vehicle, error)
+	GetVehicle(whereStruct models.Query, c context.Context) ([]models.Vehicle,error)
 }
 
 type Validator struct {
@@ -64,7 +64,7 @@ func (v *Validator) NumberVehicleExists(fl validator.FieldLevel) bool {
 	}
 	whereClause := models.WhereClause{Key: "number_vehicle", Compare: "=", Value: numberVehicle }
 	queryStruct := models.Query{Where: []models.WhereClause{whereClause}}
-	vehicles, err := v.VehicleRepo.GetVehicle(queryStruct, context.Background())
+	vehicles,err := v.VehicleRepo.GetVehicle(queryStruct, context.Background())
 	if err != nil || len(vehicles) == 0 {
 		return false
 	}
@@ -78,7 +78,7 @@ func (v *Validator) DriverExists(fl validator.FieldLevel) bool {
 	}
 	whereClause := models.WhereClause{Key: "code", Compare: "=", Value: driverCode }
 	queryStruct := models.Query{Where: []models.WhereClause{whereClause}}
-	drivers, err := v.UserRepo.GetUser(queryStruct, context.Background())
+	drivers,_, err := v.UserRepo.GetUser(queryStruct, context.Background())
 	if err != nil || len(drivers) == 0 {
 		return false
 	}

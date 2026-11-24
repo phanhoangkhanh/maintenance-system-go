@@ -32,7 +32,7 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 		},
 		OrderBy: "created_at DESC , name ASC",
 	}
-	users, err := s.Repo.GetUser(query, c.Request.Context())
+	users, _, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -69,10 +69,10 @@ func (s *Service) HandleLoginForm(loginRequest LoginRequest, c *gin.Context) (mo
 	return userFound, nil, http.StatusOK
 }
 
-func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
+func (s *Service) GetListUser(c *gin.Context) ([]models.User, int64, error, int) {
 	var userQuery models.User
 	if err := c.ShouldBindQuery(&userQuery); err != nil {
-		return nil, err, http.StatusBadRequest
+		return nil, 0, err, http.StatusBadRequest
 	}
 	query := helper.GenerateWhereStruct(&userQuery)
 	query.OrderBy = "created_at DESC , name ASC"
@@ -80,11 +80,11 @@ func (s *Service) GetListUser(c *gin.Context) ([]models.User, error, int) {
 	query.PerPage = userQuery.PerPage
 	fmt.Printf("QUERY JSON %v\n", query)
 	
-	users, err := s.Repo.GetUser(query, c.Request.Context())
+	users, total, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
-		return nil, err, http.StatusInternalServerError
+		return nil, 0, err, http.StatusInternalServerError
 	}
-	return users, nil, http.StatusOK
+	return users, total, nil, http.StatusOK
 }
 
 
@@ -100,7 +100,7 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 			},
 		},
 	}
-	existingUsers, err := s.Repo.GetUser(query, c.Request.Context())
+	existingUsers, _,err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -116,7 +116,7 @@ func (s *Service) CreateNewUser(request *CreateOrUpdateUserRequest, c *gin.Conte
 			},
 		},
 	}
-	existingUsers, err = s.Repo.GetUser(query, c.Request.Context())
+	existingUsers, _, err = s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}
@@ -150,7 +150,7 @@ func (s *Service) UpdateUser(request *CreateOrUpdateUserRequest, c *gin.Context)
 			},
 		},
 	}
-	existingUsers, err := s.Repo.GetUser(query, c.Request.Context())
+	existingUsers, _, err := s.Repo.GetUser(query, c.Request.Context())
 	if err != nil {
 		return models.User{}, err, http.StatusInternalServerError
 	}

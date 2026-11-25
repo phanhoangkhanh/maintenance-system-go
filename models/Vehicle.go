@@ -21,6 +21,7 @@ type Vehicle struct {
 
 	GetQueryParams
 
+	//Many to Many
 	DriverAttach []User `json:"driver_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:DriverID"`
 	OperatorAttach []User `json:"operator_attach" gorm:"many2many:vehicle_user;foreignKey:ID;joinForeignKey:VehicleID;References:ID;joinReferences:OperatorID"`
 

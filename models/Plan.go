@@ -20,6 +20,13 @@ type Plan struct {
 	UpdatedAt *time.Time `json:"updated_at" gorm:"column:updated_at" form:"updated_at"` // UpdatedAt is auto update current timestamp
 
 	GetQueryParams
+
+	DriverName string `json:"driver_name" gorm:"-" form:"driver_name"`
+	OperatorName string `json:"operator_name" gorm:"-" form:"operator_name"`
+
+	//Belongs To 
+	DriverAttach   User `json:"driver_attach" gorm:"foreignKey:DriverCode;references:Code"`
+	OperatorAttach User `json:"operator_attach" gorm:"foreignKey:OperatorCode;references:Code"`
 }
 
 func (Plan) TableName() string {

@@ -34,6 +34,7 @@ func (r *Router) RegisterAPIRoutes(app *app.App) {
 
 		//PLAN
 		planController := app.Plan.Controller
+		hasLoginRoute.GET("/plan", planController.GetListPlan)
 		hasLoginRoute.POST("/plan", userMiddleware.HasRoleToHandle([]string{"admin", "manager", "operator"}), planController.CreatePlan)
 	}
 }

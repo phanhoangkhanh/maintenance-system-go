@@ -13,6 +13,16 @@ type Controller struct {
 	Service *Service
 }
 
+func (controller *Controller) GetListPlan(c *gin.Context) {
+	service := controller.Service
+	plans, total, err, statusCode := service.GetListPlan(c)
+	if err != nil {
+		res.ResponseClient(c, statusCode, "Failed to get list of plans", err.Error(), 0)
+		return
+	}
+	res.ResponseClient(c, statusCode, "List of plans retrieved successfully", plans, total)
+}
+
 func (controller *Controller) CreatePlan(c *gin.Context) {
 	var request PlanRequest
 	err := c.ShouldBind(&request)

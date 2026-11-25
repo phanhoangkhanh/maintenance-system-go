@@ -14,6 +14,7 @@ type Plan struct {
 	Validator   *Validator
 }
 
+
 func InitPlan(db *gorm.DB, config *config.Config, userRepo UserRepository, customerRepo CustomerRepository, vehicleRepo VehicleRepository) *Plan {
 	repo := &Repository{
 		db: db,

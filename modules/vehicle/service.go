@@ -39,6 +39,23 @@ func (service *Service) CreateNewVehicle(request *CreateOrUpdateVehicleRequest, 
 	return vehicle, nil, 200
 }
 
+func (service *Service) UpdateVehicle(request *CreateOrUpdateVehicleRequest, c *gin.Context) (*models.Vehicle, error, int) {
+	//VALIDATE LOGIC
+	updateVehicle := &models.Vehicle{
+		Kind: request.Kind,
+		NumberVehicle: request.NumberVehicle,
+		Status: request.Status,
+		Note: request.Note,
+		ID: request.ID,
+	}
+	vehicle, err := service.Repo.UpdateVehicle(updateVehicle, c.Request.Context())
+	if err != nil {
+		return nil, err, 500
+	}
+
+	return vehicle, nil, 200
+}
+
 func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Context) (*models.VehicleUser, error, int) {
 	//VALIDATE LOGIC
 	queryVehicle := &models.Query{
@@ -52,7 +69,7 @@ func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Cont
 		Page: 1,
 		PerPage: 1,
 	}
-	vehicle, err := service.Repo.GetVehicle(*queryVehicle, c.Request.Context())
+	vehicle, _,err := service.Repo.GetVehicle(*queryVehicle, c.Request.Context())
 	if err != nil {
 		return nil, err, 500
 	}
@@ -115,10 +132,10 @@ func (service *Service) AttachVehicle(request *AttachVehicleRequest, c *gin.Cont
 	return vehicleUser, nil, 200
 }
 
-func (service *Service) GetListVehicle(c *gin.Context) ([]models.Vehicle, error, int) {
+func (service *Service) GetListVehicle(c *gin.Context) ([]models.Vehicle, int64, error, int) {
 	var vehicleQuery models.Vehicle 
 	if err := c.ShouldBindQuery(&vehicleQuery); err != nil {
-		return nil, err, 400
+		return nil, 0, err, 400
 	}
 	query := helper.GenerateWhereStruct(&vehicleQuery)
 	query.OrderBy = "created_at DESC , kind ASC"
@@ -128,16 +145,16 @@ func (service *Service) GetListVehicle(c *gin.Context) ([]models.Vehicle, error,
 
 	//Special query with eager table 
 	if vehicleQuery.DriverName != "" ||  vehicleQuery.OperatorName != ""{
-		vehicles, err := service.Repo.GetVehicleWithConditionEager(query, c.Request.Context(), vehicleQuery.DriverName, vehicleQuery.OperatorName)
+		vehicles, total, err := service.Repo.GetVehicleWithConditionEager(query, c.Request.Context(), vehicleQuery.DriverName, vehicleQuery.OperatorName)
 		if err != nil {
-			return nil, err, 500
+			return nil, 0, err, 500
 		}
-		return vehicles, nil, 200
+		return vehicles, total, nil, 200
 	}
 	//NOrmal query 
-	vehicles, err := service.Repo.GetVehicle(query, c.Request.Context())
+	vehicles, total ,err := service.Repo.GetVehicle(query, c.Request.Context())
 	if err != nil {
-		return nil, err, 500
+		return nil, 0, err, 500
 	}
-	return vehicles, nil, 200
+	return vehicles, total, nil, 200
 }

@@ -29,3 +29,13 @@ func (controller *Controller) CreateOrUpdateCustomer(c *gin.Context) {
 	res.ResponseClient(c, http.StatusOK, "Customer created successfully", customer, 0)
 
 }
+
+func (controller *Controller) GetListCustomer(c *gin.Context) {
+	service := controller.Service
+	customers, total, err, statusError := service.GetListCustomer(c)
+	if err != nil {
+		res.ResponseClient(c, statusError, "Failed to get customers", err.Error(), 0)
+		return
+	}
+	res.ResponseClient(c, http.StatusOK, "Customers retrieved successfully", customers, total)
+}

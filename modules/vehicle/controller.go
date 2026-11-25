@@ -30,6 +30,14 @@ func (controller *Controller) CreateOrUpdateVehicle(c *gin.Context) {
 			return
 		}
 		res.ResponseClient(c, 200, "Create New Vehicle successful", vehicle, 0)
+	} else if request.Action == "update" {
+		vehicle, err, statusError := controller.Service.UpdateVehicle(&request, c)
+		if err != nil {
+			log.Printf("CreateOrUpdateVehicle got error: %s\n", err)
+			res.ResponseClient(c, statusError, "CreateOrUpdateVehicle failed", err.Error(), 0	)
+			return
+		}
+		res.ResponseClient(c, 200, "Update Vehicle successful", vehicle, 0)
 	}
 
 }
@@ -51,11 +59,11 @@ func (controller *Controller) AttachVehicle(c *gin.Context) {
 }
 
 func (controller *Controller) GetListVehicle(c *gin.Context) {
-	vehicles, err, statusError := controller.Service.GetListVehicle(c)
+	vehicles,total, err, statusError := controller.Service.GetListVehicle(c)
 	if err != nil {
 		log.Printf("GetListVehicle got error: %s\n", err)
 		res.ResponseClient(c, statusError, "GetListVehicle failed", err.Error(), 0)
 		return
 	}
-	res.ResponseClient(c, 200, "Get List Vehicle successful", vehicles, 0)
+	res.ResponseClient(c, 200, "Get List Vehicle successful", vehicles, total)
 }

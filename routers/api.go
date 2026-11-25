@@ -29,7 +29,7 @@ func (r *Router) RegisterAPIRoutes(app *app.App) {
 
 		//Customer
 		customerController := app.Customer.Controller
-		//hasLoginRoute.GET("/customer", customerController.GetListCustomer)
+		hasLoginRoute.GET("/customer", customerController.GetListCustomer)
 		hasLoginRoute.POST("/customer", userMiddleware.HasRoleToHandle([]string{"admin", "manager"}), customerController.CreateOrUpdateCustomer)
 
 		//PLAN

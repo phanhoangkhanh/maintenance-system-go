@@ -78,3 +78,5 @@ Khai báo trong `.env` (local), hoặc biến môi trường khi `ENV=prod`:
 ```dotenv
 CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://app.example.com
 ```
+
+Danh sách origin này cũng được dùng để kiểm tra kết nối WebSocket `/ws`. Hãy thêm đúng origin của UI (gồm scheme và port, không có dấu `/` cuối) nếu origin đó chưa có trong danh sách.

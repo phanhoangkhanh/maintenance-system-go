@@ -25,6 +25,14 @@ func (service *Service) CreatePlan(request *PlanRequest, ctx *gin.Context) (*mod
 	return plan, nil, 200
 }
 
+func (service *Service) UpdatePlan(request *PlanRequest, ctx *gin.Context) (*models.Plan, error, int) {
+	plan, err := service.Repo.UpdatePlan(request, ctx)
+	if err != nil {
+		return nil, err, 500
+	}
+	return plan, nil, 200
+}
+
 func (service *Service) GetListPlan(ctx *gin.Context) ([]models.Plan, int64, error, int) {
 
 	var planQuery models.Plan 

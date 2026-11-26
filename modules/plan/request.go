@@ -6,5 +6,6 @@ type PlanRequest struct {
 	DriverCode string `json:"driver_code" binding:"required,inDriverList" form:"driver_code"`
 	OperatorCode string `json:"operator_code"  form:"operator_code"`
 	Note string `json:"note"  form:"note"`
-	Status string `json:"status" binding:"required,oneof=planning collecting finished" form:"status"`
+	Status string `json:"status" binding:"required,oneof=planning collecting finished deleted" form:"status"`
+	ID string `json:"id" form:"id"`
 }

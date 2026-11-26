@@ -35,6 +35,28 @@ func (repo *Repository) CreateNewPlan(request *PlanRequest, ctx context.Context)
 	return plan, nil
 }
 
+func (repo *Repository) UpdatePlan(request *PlanRequest, ctx context.Context) (*models.Plan, error) {
+	plan := models.Plan{
+		ID:            request.ID,
+		Customer:      request.Customer,
+		NumberVehicle: request.NumberVehicle,
+		DriverCode:        request.DriverCode,
+		Status:        request.Status,
+		Note:          request.Note,
+		OperatorCode:  request.OperatorCode,
+	
+	}
+	result := gorm.WithResult()
+	rows, err := gorm.G[models.Plan](repo.db, result).Where("id = ?", request.ID).Updates(ctx, plan)
+	if err != nil {
+		return nil, err
+	}
+	if rows == 0 {
+		return nil, gorm.ErrRecordNotFound
+	}
+	return &plan, nil
+}
+
 func (repo *Repository) GetListPlan(whereStruct models.Query, c context.Context, driverName string, operatorName string) ([]models.Plan, int64, error) {
 	var plans []models.Plan
 	query, _, err := helper.GrandGetAllInfo(repo.db, whereStruct, c, models.Plan{})
